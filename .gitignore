@@ -1,0 +1,8 @@
+/public/bundles/
+/var/
+/vendor/
+.phpunit
+/phpunit.xml
+.idea/
+nbproject/
+

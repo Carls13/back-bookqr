@@ -1,0 +1,41 @@
+version: '3'
+services:
+    app:
+        build: ./php-fpm
+        restart: unless-stopped
+        working_dir: /var/www/bookqr/
+        volumes:
+            - ../:/var/www/bookqr/
+        networks:
+            - default
+
+    nginx:
+        build: ./nginx
+        restart: unless-stopped
+        ports:
+            - "${NGINX_PORT}:80"
+        volumes:
+            - ./nginx/sites:/etc/nginx/conf.d/
+            - ../:/var/www/bookqr/
+        networks:
+            - default
+
+    mysql:
+        build: ./mysql
+        restart: unless-stopped
+        ports:
+            - "${MYSQL_PORT}:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+        volumes:
+              - db:/var/lib/mysql
+        networks:
+            - default
+
+networks:
+  default:
+    driver: "bridge"
+
+volumes:
+    db:

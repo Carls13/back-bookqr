@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Transformers;
+
+use App\Entity\{{SingularCamelized}};
+use League\Fractal\TransformerAbstract;
+
+class {{SingularCamelized}}Transformer extends TransformerAbstract
+{
+
+    /**
+     * Transform a simple entity
+     * @param {{SingularCamelized}} ${{SingularLowercased}}
+     * @return array
+     */
+    public function transform({{SingularCamelized}} ${{SingularLowercased}})
+    {
+        return [
+            'id' => ${{SingularLowercased}}->getUuid(),
+            'xxx' => ${{SingularLowercased}}->getXXXX(),
+            // extra fields goes here...
+        ];
+    }
+
+}
