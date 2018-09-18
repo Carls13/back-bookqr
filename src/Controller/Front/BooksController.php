@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controller\Front;
 
 use App\Entity\Book;
@@ -16,31 +15,67 @@ use App\Transformers\BookTransformer;
 use App\Helpers\ValidationTrait;
 use App\Helpers\FractableTrait;
 use App\Helpers\PaginationTrait;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class BooksController extends FOSRestController
 {
-    use ValidationTrait, FractableTrait, PaginationTrait;
+
+    use ValidationTrait,
+        FractableTrait,
+        PaginationTrait;
 
     protected $createConstraint;
     protected $updateConstraint;
+    protected $deleteConstraint;
+    protected $BOOKQR_SECRET_KEY = '123BOOKQR';
 
     function __construct()
     {
         $this->createConstraint = new Assert\Collection(array(
-            'xxxxx' => new Assert\Length(['max' => 100]),
+            'key' => new Assert\Required(),
+            'tipo' => new Assert\Length(['max' => 255]),
+            'asignatura' => new Assert\Length(['max' => 255]),
+            'nombre' => new Assert\Length(['max' => 255]),
+            'autor' => new Optional([
+                new Assert\Length(['max' => 255])
+                ]),
+            'editorial' => new Optional([
+                new Assert\Length(['max' => 255])
+                ]),
+            'codigo' => new Optional([
+                new Assert\Length(['max' => 255])
+                ])
         ));
 
         $this->updateConstraint = new Assert\Collection(array(
-            'xxxxx' => new Optional([
-                new Assert\Length(['max' => 100])
-            ]),
+            'key' => new Assert\Required(),
+            'tipo' => new Optional([
+                new Assert\Length(['max' => 255])
+                ]),
+            'asignatura' => new Optional([
+                new Assert\Length(['max' => 255])
+                ]),
+            'nombre' => new Optional([
+                new Assert\Length(['max' => 255])
+                ]),
+            'autor' => new Optional([
+                new Assert\Length(['max' => 255])
+                ]),
+            'editorial' => new Optional([
+                new Assert\Length(['max' => 255])
+                ]),
+            'codigo' => new Optional([
+                new Assert\Length(['max' => 255])
+                ]),
+            'status' => new Optional([
+                new Assert\Type('numeric')
+                ])
         ));
-
     }
 
     /**
      * Show just one record
-     * @Get("/books/{uuid}", name="front_books_show")
+     * @Get("/books/{id}", name="front_books_show")
      * @param Book $book
      * @return Response
      */
@@ -48,7 +83,11 @@ class BooksController extends FOSRestController
     {
         $book = $this->transform($book, new BookTransformer());
 
-        $view = $this->view($book, Response::HTTP_OK);
+        $response['code'] = 200;
+        $response['message'] = "OK";
+        $response['response'] = $book['data'];
+
+        $view = $this->view($response, Response::HTTP_OK);
         return $this->handleView($view);
     }
 
@@ -79,28 +118,45 @@ class BooksController extends FOSRestController
      */
     public function create(Request $request)
     {
+
         //validate data
-        $post = $request->request->all();
-        $this->validateData($post, $this->createConstraint);
+        $post = $request->getContent();
+        $array = json_decode($post, true);
+        $this->validateData($array, $this->createConstraint);
 
-        //fill entity with request data
-        $book = new Book();
-        $book->fill($post);
+        try {
+            if ($array['key'] != $this->BOOKQR_SECRET_KEY) {
+                throw new HttpException(403, 'Clave incorrecta');
+            }
 
-        //save entity
-        $db = $this->getDoctrine()->getManager('default');
-        $db->persist($book);
-        $db->flush();
+            //fill entity with request data
+            $book = new Book();
+            $book->fill($array);
 
-        $book = $this->transform($book, new BookTransformer());
+            //save entity
+            $db = $this->getDoctrine()->getManager('default');
+            $db->persist($book);
+            $db->flush();
 
-        $view = $this->view($book, Response::HTTP_CREATED);
+            $book = $this->transform($book, new BookTransformer());
+
+            $response['code'] = 201;
+            $response['message'] = "OK";
+            $response['response'] = $book['data'];
+            $resp = Response::HTTP_CREATED;
+        } catch (HttpException $e) {
+            $response['code'] = 403;
+            $response['message'] = "Error";
+            $response['response'] = $e->getMessage();
+            $resp = Response::HTTP_UNAUTHORIZED;
+        }
+        $view = $this->view($response, $resp);
         return $this->handleView($view);
     }
 
     /**
      * Updates and validates a record
-     * @Put("/books/{uuid}", name="front_books_update")
+     * @Put("/books/{id}", name="front_books_update")
      * @param Request $request
      * @param  Book $book
      * @return Response
@@ -108,36 +164,70 @@ class BooksController extends FOSRestController
     public function update(Request $request, Book $book)
     {
         //validate data
-        $post = $request->request->all();
-        $this->validateData($post, $this->updateConstraint);
+        $post = $request->getContent();
+        $array = json_decode($post, true);
+        $this->validateData($array, $this->updateConstraint);
 
-        //fill entity with request data
-        $book->fill($post);
+        try {
+            if ($array['key'] != $this->BOOKQR_SECRET_KEY) {
+                throw new HttpException(403, 'Clave incorrecta');
+            }
 
-        //save entity
-        $db = $this->getDoctrine()->getManager('default');
-        $db->flush();
+            //fill entity with request data
+            $book->fill($array);
 
-        $book = $this->transform($book, new BookTransformer());
+            //save entity
+            $db = $this->getDoctrine()->getManager('default');
+            $db->flush();
 
-        $view = $this->view($book, Response::HTTP_OK);
+            $book = $this->transform($book, new BookTransformer());
+
+            $response['code'] = 200;
+            $response['message'] = "OK";
+            $response['response'] = $book['data'];
+            $resp = Response::HTTP_OK;
+        } catch (HttpException $e) {
+            $response['code'] = 403;
+            $response['message'] = "Error";
+            $response['response'] = $e->getMessage();
+            $resp = Response::HTTP_UNAUTHORIZED;
+        }
+        $view = $this->view($response, $resp);
         return $this->handleView($view);
     }
 
     /**
      * Deletes a record
-     * @Delete("/books/{uuid}", name="front_books_delete")
+     * @Delete("/books/{id}", name="front_books_delete")
+     * @param Request $request
      * @param  Book $book
      * @return Response
      */
-    public function delete(Book $book)
+    public function delete(Request $request, Book $book)
     {
-        //save entity
-        $db = $this->getDoctrine()->getManager('default');
-        $db->remove($book);
-        $db->flush();
+        //validate data
+        $post = $request->getContent();
+        $array = json_decode($post, true);
 
-        $view = $this->view([], Response::HTTP_NO_CONTENT);
+        try {
+            if ($array['key'] != $this->BOOKQR_SECRET_KEY) {
+                throw new HttpException(403, 'Clave incorrecta');
+            }
+            //save entity
+            $db = $this->getDoctrine()->getManager('default');
+            $db->remove($book);
+            $db->flush();
+
+            $response = [];
+            $resp = Response::HTTP_NO_CONTENT;
+        } catch (HttpException $ex) {
+            $response['code'] = 403;
+            $response['message'] = "Error";
+            $response['response'] = $e->getMessage();
+            $resp = Response::HTTP_UNAUTHORIZED;
+        }
+
+        $view = $this->view($response, $resp);
         return $this->handleView($view);
     }
 }

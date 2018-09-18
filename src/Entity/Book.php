@@ -2,12 +2,15 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use App\Helpers\EntityTrait;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\BookRepository")
  */
 class Book
 {
+    use EntityTrait;
+    
 
     /**
      * @ORM\Id()
@@ -45,17 +48,17 @@ class Book
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $codigo;
-    
+
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", options={"default":"0"})
      */
-    private $status;
+    private $status = 0;
 
     public function getId()
     {
         return $this->id;
     }
-    
+
     function getTipo()
     {
         return $this->tipo;
@@ -125,6 +128,4 @@ class Book
     {
         $this->status = $status;
     }
-
-
 }

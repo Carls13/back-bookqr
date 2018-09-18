@@ -16,9 +16,14 @@ class BookTransformer extends TransformerAbstract
     public function transform(Book $book)
     {
         return [
-            'id' => $book->getUuid(),
-            'xxx' => $book->getXXXX(),
-            // extra fields goes here...
+            'id' => $book->getId(),
+            'tipo' => $book->getTipo(),
+            'asignatura' => $book->getAsignatura(),
+            'nombre' => $book->getNombre(),
+            'autor' => $book->getEditorial(),
+            'editorial' => $book->getEditorial(),
+            'codigo' => $book->getCodigo(),
+            'status' => $book->getStatus()
         ];
     }
 
