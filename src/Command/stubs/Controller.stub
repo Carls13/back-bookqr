@@ -1,0 +1,143 @@
+<?php
+
+namespace App\Controller\{{ControllerTypeCamelized}};
+
+use App\Entity\{{SingularCamelized}};
+use FOS\RestBundle\Controller\FOSRestController;
+use FOS\RestBundle\Controller\Annotations\Get;
+use FOS\RestBundle\Controller\Annotations\Post;
+use FOS\RestBundle\Controller\Annotations\Put;
+use FOS\RestBundle\Controller\Annotations\Delete;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\Constraints\Optional;
+use Symfony\Component\Validator\Constraints as Assert;
+use App\Transformers\{{SingularCamelized}}Transformer;
+use App\Helpers\ValidationTrait;
+use App\Helpers\FractableTrait;
+use App\Helpers\PaginationTrait;
+
+class {{PluralCamelized}}Controller extends FOSRestController
+{
+    use ValidationTrait, FractableTrait, PaginationTrait;
+
+    protected $createConstraint;
+    protected $updateConstraint;
+
+    function __construct()
+    {
+        $this->createConstraint = new Assert\Collection(array(
+            'xxxxx' => new Assert\Length(['max' => 100]),
+        ));
+
+        $this->updateConstraint = new Assert\Collection(array(
+            'xxxxx' => new Optional([
+                new Assert\Length(['max' => 100])
+            ]),
+        ));
+
+    }
+
+    /**
+     * Show just one record
+     * @Get("/{{PluralLowercased}}/{uuid}", name="{{ControllerTypeLowercased}}_{{PluralLowercased}}_show")
+     * @param {{SingularCamelized}} ${{SingularLowercased}}
+     * @return Response
+     */
+    public function show({{SingularCamelized}} ${{SingularLowercased}})
+    {
+        ${{SingularLowercased}} = $this->transform(${{SingularLowercased}}, new {{SingularCamelized}}Transformer());
+
+        $view = $this->view(${{SingularLowercased}}, Response::HTTP_OK);
+        return $this->handleView($view);
+    }
+
+    /**
+     * Get a list of records
+     * @Get("/{{PluralLowercased}}", name="{{ControllerTypeLowercased}}_{{PluralLowercased}}_list")
+     * @param Request $request
+     * @return Response
+     */
+    public function listAll(Request $request)
+    {
+        $repository = $this->getDoctrine()->getRepository({{SingularCamelized}}::class);
+        ${{PluralLowercased}}Query = $repository->findAllQuery();
+
+        ${{PluralLowercased}}Paginated = $this->paginate(${{PluralLowercased}}Query, $request);
+
+        ${{PluralLowercased}} = $this->transform(${{PluralLowercased}}Paginated, new {{SingularCamelized}}Transformer());
+
+        $view = $this->view(${{PluralLowercased}}, Response::HTTP_OK);
+        return $this->handleView($view);
+    }
+
+    /**
+     * Create and validates a record
+     * @Post("/{{PluralLowercased}}", name="{{ControllerTypeLowercased}}_{{PluralLowercased}}_create")
+     * @param Request $request
+     * @return Response
+     */
+    public function create(Request $request)
+    {
+        //validate data
+        $post = $request->request->all();
+        $this->validateData($post, $this->createConstraint);
+
+        //fill entity with request data
+        ${{SingularLowercased}} = new {{SingularCamelized}}();
+        ${{SingularLowercased}}->fill($post);
+
+        //save entity
+        $db = $this->getDoctrine()->getManager('default');
+        $db->persist(${{SingularLowercased}});
+        $db->flush();
+
+        ${{SingularLowercased}} = $this->transform(${{SingularLowercased}}, new {{SingularCamelized}}Transformer());
+
+        $view = $this->view(${{SingularLowercased}}, Response::HTTP_CREATED);
+        return $this->handleView($view);
+    }
+
+    /**
+     * Updates and validates a record
+     * @Put("/{{PluralLowercased}}/{uuid}", name="{{ControllerTypeLowercased}}_{{PluralLowercased}}_update")
+     * @param Request $request
+     * @param  {{SingularCamelized}} ${{SingularLowercased}}
+     * @return Response
+     */
+    public function update(Request $request, {{SingularCamelized}} ${{SingularLowercased}})
+    {
+        //validate data
+        $post = $request->request->all();
+        $this->validateData($post, $this->updateConstraint);
+
+        //fill entity with request data
+        ${{SingularLowercased}}->fill($post);
+
+        //save entity
+        $db = $this->getDoctrine()->getManager('default');
+        $db->flush();
+
+        ${{SingularLowercased}} = $this->transform(${{SingularLowercased}}, new {{SingularCamelized}}Transformer());
+
+        $view = $this->view(${{SingularLowercased}}, Response::HTTP_OK);
+        return $this->handleView($view);
+    }
+
+    /**
+     * Deletes a record
+     * @Delete("/{{PluralLowercased}}/{uuid}", name="{{ControllerTypeLowercased}}_{{PluralLowercased}}_delete")
+     * @param  {{SingularCamelized}} ${{SingularLowercased}}
+     * @return Response
+     */
+    public function delete({{SingularCamelized}} ${{SingularLowercased}})
+    {
+        //save entity
+        $db = $this->getDoctrine()->getManager('default');
+        $db->remove(${{SingularLowercased}});
+        $db->flush();
+
+        $view = $this->view([], Response::HTTP_NO_CONTENT);
+        return $this->handleView($view);
+    }
+}

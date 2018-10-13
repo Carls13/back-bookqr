@@ -1,0 +1,6 @@
+# Read the documentation: https://symfony.com/doc/master/bundles/FOSRestBundle/index.html
+fos_rest:
+    exception:
+        enabled: true
+        exception_controller: 'App\Exceptions\ApiExceptionsHandlerController::handle'
+

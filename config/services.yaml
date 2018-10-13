@@ -1,0 +1,57 @@
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+    locale: 'en'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: false       # Allows optimizing the container by removing unused services; this also means
+                            # fetching services directly from the container via $container->get() won't work.
+                            # The best practice is to be explicit about your dependencies anyway.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/*'
+        exclude: '../src/{Entity,Migrations,Tests,Kernel.php}'
+
+    # controllers are imported separately to make sure services can be injected
+    # as action arguments even if you don't extend any base controller class
+    App\Controller\:
+        resource: '../src/Controller/*'
+        tags: ['controller.service_arguments']
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    App\Listener\ApiExceptionsHandler:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+
+    # Inject paginator on helper
+    App\Helpers\PaginatedResult:
+        arguments:
+            $paginator: '../vendor/doctrine/orm/lib/Doctrine/ORM/Tools/Pagination/Paginator.php'
+
+    # Doctrine timestamp listener
+    App\Listener\TimestampSubscriber:
+        tags:
+            - { name: doctrine.event_subscriber}
+  
+    # UUid listener
+    App\Listener\UuidSubscriber:
+        tags:
+            - { name: doctrine.event_subscriber}
+
+    # logger on another channel to log user access
+    App\Service\LoggingService:
+        arguments: ["@monolog.logger.user-access"]
+
+    # format for custom access logs
+    monolog.formatter.user_access:
+        class: Monolog\Formatter\LineFormatter
+        arguments:
+            - "[%%datetime%%] %%context.consumer%% %%level_name%%: %%context.code%% %%context.route%% %%context.method%% %%context.uri%%\n"
