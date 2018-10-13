@@ -192,7 +192,8 @@ class BooksController extends FOSRestController
             $response['response'] = $e->getMessage();
             $resp = Response::HTTP_UNAUTHORIZED;
         }
-	$view = $this->view($response, $resp);
+	        // Add headers for CORS        $response->headers->set('Access-Control-Allow-Origin', '*');        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE,OTO ATH     epne_haese"csNRL_O_ER<"toian<tt_e ct"
+        $view = $this->view($response, $resp);
         return $this->handleView($view);
     }
 

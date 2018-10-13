@@ -42,8 +42,11 @@ class EventSubscriber implements EventSubscriberInterface
 
     public function onKernelRequestPre(GetResponseEvent $event)
     {
+	if (!$event->isMasterRequest()) {
+		return;
+	}
         $request = $event->getRequest();
-
+	$method = $request->getRealMethod();
         $this->checkLanguage($request, $this->translator);
 
         //disabled for dev and test
@@ -51,14 +54,23 @@ class EventSubscriber implements EventSubscriberInterface
             $this->checkKongUser($request);
             $this->checkUserPermissionPerRoute($request);
         }
+	if ('OPTIONS' == $method) {
+		$response = new Response();
+		$event->setResponse($response);
+	}
 
     }
 
     public function onKernelResponsePost(FilterResponseEvent $event)
     {
+	if (!$event->isMasterRequest()) {
+		return;
+	}
         $request = $event->getRequest();
         $response = $event->getResponse();
-
+	$response->headers->set('Access-Control-Allow-Origin', '*');
+	$response->headers->set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, PATCH, OPTIONS');
+	$response->headers->set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
         //log custom access
         $this->logAccess($request, $response);
     }
