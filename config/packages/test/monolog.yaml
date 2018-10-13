@@ -1,0 +1,15 @@
+monolog:
+    channels: ['user-access']
+    handlers:
+        main:
+            type: stream
+            path: "%kernel.logs_dir%/%kernel.environment%.log"
+            level: debug
+            channels: ["!event"]
+        custom-user-access:
+            type: rotating_file
+            max_files: 2
+            path: "%kernel.logs_dir%/%kernel.environment%_custom-access.log"
+            level: info
+            channels: user-access
+            formatter: monolog.formatter.user_access

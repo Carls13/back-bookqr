@@ -1,0 +1,119 @@
+<?php
+
+namespace App\Tests;
+
+use App\Tests\Helpers\ClientTrait;
+use Faker\Factory;
+use App\Entity\{{SingularCamelized}};
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Bundle\FrameworkBundle\Client;
+
+class {{PluralCamelized}}ControllerTest extends WebTestCase
+{
+    use ClientTrait;
+
+    /**
+     * @var Client
+     */
+    protected static $client;
+    protected static $faker;
+    protected static $db;
+
+    public static function setUpBeforeClass()
+    {
+        self::$client = self::setupClient();
+
+        self::$faker = Factory::create();
+        self::$db = self::getEntityManager();
+    }
+
+    public static function tearDownBeforeClass() {
+        self::$client = null;
+        self::$faker = null;
+        self::$db = null;
+    }
+
+    private function createEntity()
+    {
+        $entity = new {{SingularCamelized}}();
+        $entity->fill([
+            'xxxxx' => self::$faker->words(3, true),
+        ]);
+
+        self::$db->persist($entity);
+        self::$db->flush();
+
+        return $entity;
+    }
+
+    public function testGet{{PluralCamelized}}List()
+    {
+        self::$client->request('GET', '/{{PluralLowercased}}');
+        $response = self::$client->getResponse();
+        $responseBody = json_decode($response->getContent(), true);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertArrayHasKey('data', $responseBody);
+        $this->assertEquals('application/json', $response->headers->get('Content-Type'));
+    }
+
+    public function testGet{{SingularCamelized}}Show()
+    {
+        $entity = $this->createEntity();
+
+        self::$client->request('GET', '/{{PluralLowercased}}/' . $entity->getUuid());
+        $response = self::$client->getResponse();
+        $responseBody = json_decode($response->getContent(), true);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertArrayHasKey('data', $responseBody);
+
+        $this->assertArrayHasKey('xxxxx', $responseBody['data']);
+    }
+
+    public function testPost{{SingularCamelized}}()
+    {
+        $data = [
+            'xxxx' => self::$faker->words(3, true),
+        ];
+
+        self::$client->request('POST', '/{{PluralLowercased}}', [], [], [], json_encode($data));
+        $response = self::$client->getResponse();
+        $responseBody = json_decode($response->getContent(), true);
+
+        $this->assertEquals(201, $response->getStatusCode());
+        $this->assertArrayHasKey('data', $responseBody);
+
+        $this->assertArrayHasKey('xxx', $responseBody['data']);
+    }
+
+    public function testPut{{SingularCamelized}}()
+    {
+        $entity = $this->createEntity();
+
+        $data = [
+            'xxxx' => 'modified'
+        ];
+
+        self::$client->request('PUT', '/{{PluralLowercased}}/' . $entity->getUuid(), [], [], [], json_encode($data));
+        $response = self::$client->getResponse();
+        $responseBody = json_decode($response->getContent(), true);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertArrayHasKey('data', $responseBody);
+
+        $this->assertArrayHasKey('xxxx', $responseBody['data']);
+        $this->assertEquals($responseBody['data']['xxxxx'], 'xxxx');
+    }
+
+    public function testDelete{{SingularCamelized}}()
+    {
+        $entity = $this->createEntity();
+
+        self::$client->request('DELETE', '/{{PluralLowercased}}/' . $entity->getUuid());
+        $response = self::$client->getResponse();
+
+        $this->assertEquals(204, $response->getStatusCode());
+    }
+
+}
